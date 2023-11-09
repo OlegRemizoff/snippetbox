@@ -1,15 +1,22 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 	// "path/filepath"
 )
 
 
 
-
 func main() {
+	addr := flag.String("addr", ":8000", "Сетевой адрес HTTP") // -addr "127.0.0.1:9999"
+	flag.Parse()
+	
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile) 
+
 	// Используется функция http.NewServeMux() для инициализации нового рутера, затем
     // регестрируем обработчики для URL-шаблона "/".
 	r :=  http.NewServeMux()
@@ -23,12 +30,19 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	r.Handle("/static/", http.StripPrefix("/static", fileServer))
 
+	// Инициализируем новую структуру http.Server и передаем наши данные
+	srv := &http.Server{
+		Addr: *addr,
+		ErrorLog: errLog,
+		Handler: r,
+	}
 
 	// Используется функция http.ListenAndServe() для запуска нового веб-сервера. 
     // Мы передаем два параметра: TCP-адрес сети для прослушивания и созданный роутер
-	log.Println("Запуск сервера на http://127.0.0.1:8000")
-	err := http.ListenAndServe(":8000", r)
-	log.Fatal(err)
+	// err := http.ListenAndServe(*addr, r)  old err := http.ListenAndServe(":8000", r)
+	infoLog.Printf("Запуск сервера на %s", *addr)
+	err := srv.ListenAndServe()
+	errLog.Fatal(err)
 
 }
 
