@@ -9,12 +9,29 @@ import (
 )
 
 
+
+type Application struct {
+	errLog 	*log.Logger
+	infoLog *log.Logger
+	ServerError *error
+
+}
+
+
+// old Обработчик главной страницы
+// func home(w http.ResponseWriter, r *http.Request) {
+// 	if r.URL.Path != "/" {
+// 		http.NotFound(w, r)
+// 		return
+// 	}
+
 // Обработчик главной страницы
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
+
 
 	files := []string {
 		"./ui/templates/home.html",
@@ -43,7 +60,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 
 // Обработчик для отображения содержимого заметки.
-func showSnippet(w http.ResponseWriter, r *http.Request) {
+// func showSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *Application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
@@ -55,7 +73,7 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 
 
 // Обработчик для создания заметки.
-func createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *Application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)

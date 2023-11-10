@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	// "path/filepath"
+	
 )
 
 
@@ -17,12 +17,18 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile) 
 
+	app := &Application{
+		errLog:  errLog,
+		infoLog: infoLog,
+	}
+
+
 	// Используется функция http.NewServeMux() для инициализации нового рутера, затем
     // регестрируем обработчики для URL-шаблона "/".
 	r :=  http.NewServeMux()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/snippet", showSnippet)
-	r.HandleFunc("/snippet/create", createSnippet)
+	r.HandleFunc("/", app.home)
+	r.HandleFunc("/snippet", app.showSnippet)
+	r.HandleFunc("/snippet/create", app.createSnippet)
 
 
 	// Регистрации обработчика для всех запросов, которые начинаются с "/static/"
@@ -53,6 +59,8 @@ func main() {
 
 
 // Ограничение просмотра файловой системы
+
+// import  "path/filepath"
 // type neuteredFileSystem struct {
 // 	fs http.FileSystem
 // }
