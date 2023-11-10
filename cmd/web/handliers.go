@@ -13,7 +13,6 @@ import (
 type Application struct {
 	errLog 	*log.Logger
 	infoLog *log.Logger
-	ServerError *error
 
 }
 
@@ -43,7 +42,8 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles(files...)
 	if err != nil {
 		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, err)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.Execute(w, nil)
 	if err != nil {
 		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, err)
 	}
 
 } 
@@ -64,7 +64,7 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 func (app *Application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (app *Application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
-		http.Error(w, "Метод запрещен!", http.StatusMethodNotAllowed)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
