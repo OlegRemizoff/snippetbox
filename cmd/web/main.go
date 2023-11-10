@@ -23,24 +23,11 @@ func main() {
 	}
 
 
-	// Используется функция http.NewServeMux() для инициализации нового рутера, затем
-    // регестрируем обработчики для URL-шаблона "/".
-	r :=  http.NewServeMux()
-	r.HandleFunc("/", app.home)
-	r.HandleFunc("/snippet", app.showSnippet)
-	r.HandleFunc("/snippet/create", app.createSnippet)
-
-
-	// Регистрации обработчика для всех запросов, которые начинаются с "/static/"
-	// Убираем префикс "/static" перед тем как запрос достигнет http.FileServer
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	r.Handle("/static/", http.StripPrefix("/static", fileServer))
-
 	// Инициализируем новую структуру http.Server и передаем наши данные
 	srv := &http.Server{
 		Addr: *addr,
 		ErrorLog: errLog,
-		Handler: r,
+		Handler: app.routes(),
 	}
 
 	// Используется функция http.ListenAndServe() для запуска нового веб-сервера. 
