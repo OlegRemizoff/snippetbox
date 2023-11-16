@@ -5,21 +5,33 @@ import (
 	"log"
 	"net/http"
 	"os"
-	
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql" //  _ для исбежания ошибки, main.go ничего не использует из этого пакетп
+
 )
-
-
 
 func main() {
 	addr := flag.String("addr", ":8000", "Сетевой адрес HTTP") // -addr "127.0.0.1:9999"
+	dsn := flag.String("dsn", "oleg:1234@/snippetbox?parseTime=true", "Название MySQL источника данных")
+
 	flag.Parse()
 	
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile) 
 
+	// Передаем в отдельную функцию openDB() полученный  
+	// источник данных (DSN) из флага командной строки.
+	db, err := openDB(*dsn)
+	if err != nil {
+		errLog.Fatal(err)
+	}
+
+	defer db.Close()
+
 	app := &Application{
 		errLog:  errLog,
 		infoLog: infoLog,
+		
 	}
 
 
@@ -34,13 +46,24 @@ func main() {
     // Мы передаем два параметра: TCP-адрес сети для прослушивания и созданный роутер
 	// err := http.ListenAndServe(*addr, r)  old err := http.ListenAndServe(":8000", r)
 	infoLog.Printf("Запуск сервера на %s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errLog.Fatal(err)
 
 }
 
 
-
+// Функция openDB() обертывает sql.Open() и возвращает пул соединений sql.DB 
+// для заданной строки подключения (DSN)
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn) // возвращает объект sql.DB - это пул множества соединений
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil { // для создания соединения с MySQL и проверки на наличие ошибок
+		return nil, err
+	}
+	return db, nil
+}
 
 
 
