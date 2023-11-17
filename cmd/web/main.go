@@ -7,8 +7,10 @@ import (
 	"os"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql" //  _ для исбежания ошибки, main.go ничего не использует из этого пакетп
+	"github.com/OlegRemizoff/snippetbox/pkg/models/mysql"
 
 )
+
 
 func main() {
 	addr := flag.String("addr", ":8000", "Сетевой адрес HTTP") // -addr "127.0.0.1:9999"
@@ -19,8 +21,8 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile) 
 
-	// Передаем в отдельную функцию openDB() полученный  
-	// источник данных (DSN) из флага командной строки.
+	// Передаем в отдельную функцию openDB()
+	// полученный  источник данных (DSN) из флага командной строки.
 	db, err := openDB(*dsn)
 	if err != nil {
 		errLog.Fatal(err)
@@ -29,17 +31,17 @@ func main() {
 	defer db.Close()
 
 	app := &Application{
-		errLog:  errLog,
-		infoLog: infoLog,
-		
+		errLog: errLog,
+		infoLog:  infoLog,
+		snippets: &mysql.SnippetModel{DB: db},
 	}
 
 
 	// Инициализируем новую структуру http.Server и передаем наши данные
 	srv := &http.Server{
-		Addr: *addr,
+		Addr:     *addr,
 		ErrorLog: errLog,
-		Handler: app.routes(),
+		Handler:  app.routes(),
 	}
 
 	// Используется функция http.ListenAndServe() для запуска нового веб-сервера. 

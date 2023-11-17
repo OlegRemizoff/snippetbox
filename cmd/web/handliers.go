@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"html/template"
 	"strconv"
+	"github.com/OlegRemizoff/snippetbox/pkg/models/mysql"
 )
 
 
@@ -13,6 +14,7 @@ import (
 type Application struct {
 	errLog 	*log.Logger
 	infoLog *log.Logger
+	snippets *mysql.SnippetModel
 
 }
 
@@ -74,14 +76,23 @@ func (app *Application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 // Обработчик для создания заметки.
 func (app *Application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	title := "История про улитку"
+	content := "Улитка выползла из раковины,\nвытянула рожки,\nи опять подобрала их."
+	expires := "7"
+	// Передаем данные в метод SnippetModel.Insert(), получая обратно
+	// ID только что созданной записи в базу данных.
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 
-	w.Write([]byte("Создания новой заметки..."))
 }
 
 
