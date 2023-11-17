@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/OlegRemizoff/snippetbox/pkg/models"
 
 )
@@ -35,5 +36,25 @@ func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 
 // Get - Метод для возвращения данных заметки по её идентификатору ID.
 func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
-	return nil, nil
+	stmt := `SELECT id, title, content, created, expires FROM snippets 
+			 WHERE expires > UTC_TIMESTAMP() AND id = ?`
+	row := m.DB.QueryRow(stmt, id)
+	// Инициализируем указатель на новую структуру Snippet.
+	s := &models.Snippet{}
+
+	// row.Scan(), чтобы скопировать значения из каждого поля от sql.Row
+	// аргументы для row.Scan - это указатели на место, куда требуется скопировать данные
+	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	// err := m.DB.QueryRow("SELECT ...", id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires) вместо stmt
+	if err != nil {
+		//Если ошибка обнаружена, то возвращаем нашу ошибку из модели models.ErrNoRecords.Is(err, sql.ErrNoRows)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+	// Возвращается объект Snippet.
+	return s, nil
+
 }

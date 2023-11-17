@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"errors" 
+	"strconv"
 	"net/http"
 	"html/template"
-	"strconv"
+	"github.com/OlegRemizoff/snippetbox/pkg/models"
 	"github.com/OlegRemizoff/snippetbox/pkg/models/mysql"
 )
 
@@ -69,8 +71,19 @@ func (app *Application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
+	// Вызываем метода Get из модели Snipping для извлечения данных
+	s, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	fmt.Fprintf(w, "%v", s)
 
-	fmt.Fprintf(w, "Отображение выбранной заметки с ID %d...", id)
+	// fmt.Fprintf(w, "Отображение выбранной заметки с ID %d...", id)
 }
 
 
