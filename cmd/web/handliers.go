@@ -6,13 +6,13 @@ import (
 	"errors" 
 	"strconv"
 	"net/http"
-	"html/template"
+	// "html/template"
 	"github.com/OlegRemizoff/snippetbox/pkg/models"
 	"github.com/OlegRemizoff/snippetbox/pkg/models/mysql"
 )
 
 
-
+// Структура  для хранения зависимостей всего веб-приложения.
 type Application struct {
 	errLog 	*log.Logger
 	infoLog *log.Logger
@@ -36,29 +36,39 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	files := []string {
-		"./ui/templates/home.html",
-		"./ui/templates/base.html",
-		"./ui/templates/inc/footer.html",
-		"./ui/templates/inc/sidebar.html",
-	}
-	
-	tmpl, err := template.ParseFiles(files...)
+	s, err := app.snippets.Latest()
 	if err != nil {
-		log.Println(err.Error())
-		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		app.serverError(w, err)
 		return
+	} 
+	
+	for _, snippet := range s {
+		fmt.Fprintf(w, "%v", snippet)
 	}
 
+	// files := []string {
+	// 	"./ui/templates/home.html",
+	// 	"./ui/templates/base.html",
+	// 	"./ui/templates/inc/footer.html",
+	// 	"./ui/templates/inc/sidebar.html",
+	// }
+	
+	// tmpl, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	app.serverError(w, err)
+	// 	return
+	// }
 
-	// Метод записывает содержимое шаблона в тело http ответа
-	// последний параметр позволяет отправлять динамические данные в шаблон
-	err = tmpl.Execute(w, nil)
-	if err != nil {
-		log.Println(err.Error())
-		app.serverError(w, err)
-	}
+
+	// // Метод записывает содержимое шаблона в тело http ответа
+	// // последний параметр позволяет отправлять динамические данные в шаблон
+	// err = tmpl.Execute(w, nil)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	app.serverError(w, err)
+	// }
 
 } 
 
